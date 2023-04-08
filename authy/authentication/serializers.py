@@ -98,3 +98,10 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         user = self.validated_data['user']
         user.set_password(password)
         user.save()
+
+
+class DeleteUserAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username',
+                  'full_name', 'phone_number', 'sex', 'otp',)

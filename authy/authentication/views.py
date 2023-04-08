@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth import authenticate
 from .models import User
-from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
+from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, DeleteUserAccountSerializer
 from .utils import generate_otp, send_otp, send_welcome_email, send_password_reset_email, send_password_reset_confirmation_email
 
 
@@ -110,3 +110,36 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         serializer.save()
         send_password_reset_confirmation_email(user)
         return Response({'status': 'success', 'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
+
+
+# class DeleteUserAccountView(generics.DestroyAPIView):
+#     queryset = User.objects.all()
+#     permission_classes = (permissions.IsAuthenticated,)
+#     serializer_class = DeleteUserAccountSerializer
+
+#     def destroy(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         if instance == request.user:
+#             self.perform_destroy(instance)
+#             return Response(status=status.HTTP_204_NO_CONTENT)
+#         else:
+#             return Response({'error': 'you  can only delete your own account'}, status=status.HTTP_403_FORBIDDEN)
+
+class DeleteUserAccountView(generics.DestroyAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        return Response({'message': 'account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+    # def delete(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     if instance == request.user:
+    #         if instance.is_staff or instance.is_superuser:
+    #             return Response({'error': 'you cannot delete an admin account'}, status=status.HTTP_403_FORBIDDEN)
+    #         self.perform_destroy(instance)
+    #     else:
+    #         return Response({'error': 'you can only delete your own account.'}, status=status.HTTP_403_FORBIDDEN)

@@ -165,3 +165,5 @@ REST_FRAMEWORK = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+FRONTEND_URL = str(os.getenv('FRONTEND_URL', 'http://localhost:8000'))

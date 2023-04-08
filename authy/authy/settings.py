@@ -142,7 +142,7 @@ EMAIL_HOST = 'smtp-mail.outlook.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = str(os.getenv('EMAIL_HOST_USER'))
-EMAIL_HOST_PASSWORD = str(os.getenv('EMAIL_HOST_PASSWORD'))
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 
 SWAGGER_SETTINGS = {
@@ -167,4 +167,4 @@ REST_FRAMEWORK = {
 }
 
 # frontend developer can set the url they want.
-FRONTEND_URL = str(os.getenv('FRONTEND_URL', 'http://localhost:8000'))
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')

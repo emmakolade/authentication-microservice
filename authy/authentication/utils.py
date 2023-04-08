@@ -26,7 +26,7 @@ def send_otp(email, otp):
 def send_welcome_email(email):
     subject = "welcome to our site"
     message = "Thank you for registering with us."
-    from_email = settings.EMAIL_HOST_USER
+    from_email = settings.EMAIL_HOST_USER  # can also be like this to specify the name (f"Your Name <{settings.EMAIL_HOST_USER}>")
     recipient_list = [email]
     send_mail(subject, message, from_email,
               recipient_list, fail_silently=False)

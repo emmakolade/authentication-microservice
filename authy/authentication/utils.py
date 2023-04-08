@@ -1,3 +1,6 @@
+from django.core.mail import EmailMultiAlternatives
+from django.utils.html import strip_tags
+from django.template.loader import render_to_string
 from sendgrid.helpers.mail import Mail
 from sendgrid import SendGridAPIClient
 import os
@@ -21,6 +24,23 @@ def send_otp(email, otp):
     recipient_list = [email]
     send_mail(subject, message, from_email,
               recipient_list, fail_silently=False)
+
+
+# def send_otp(email, otp):
+#     subject = "Please kindly verify your account"
+#     html_message = render_to_string('/email_template.html', {'otp': otp})
+#     text_message = strip_tags(html_message)
+#     from_email = settings.EMAIL_HOST_USER
+#     recipient_list = [email]
+
+#     email = EmailMultiAlternatives(
+#         subject,
+#         text_message,
+#         from_email,
+#         recipient_list
+#     )
+#     email.attach_alternative(html_message, "text/html")
+#     email.send(fail_silently=False)
 
 
 def send_welcome_email(email):

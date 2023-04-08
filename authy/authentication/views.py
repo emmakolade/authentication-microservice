@@ -6,8 +6,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth import authenticate
 from .models import User
-from .serializers import UserSerializer, OTPSerializer, LoginSerializer
-from .utils import generate_otp, send_otp, send_welcome_email
+from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
+from .utils import generate_otp, send_otp, send_welcome_email, send_password_reset_email, send_password_reset_confirmation_email
 
 
 class RegisterView(generics.CreateAPIView):
@@ -71,9 +71,6 @@ class LoginView(generics.GenericAPIView):
             )
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-
-
-
 # class LoginView(TokenObtainPairView):
 #     serializer_class = TokenObtainPairSerializer
 #     def post(self, request, *args, **kwargs):
@@ -90,3 +87,26 @@ class LoginView(generics.GenericAPIView):
 
 # class TokenRefreshView(TokenRefreshView):
 #     pass
+
+class PasswordResetView(generics.GenericAPIView):
+    serializer_class = PasswordResetSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+        send_password_reset_email(user)
+        return Response({'status': 'success', 'message': 'Password reset link sent to email'}, status=status.HTTP_200_OK)
+
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    serializer_class = PasswordResetConfirmSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        serializer.save()
+        send_password_reset_confirmation_email(user)
+        return Response({'status': 'success', 'message': 'Password reset successfully'}, status=status.HTTP_200_OK)

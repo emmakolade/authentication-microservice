@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
+from django.conf import settings
+import jwt
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -57,3 +59,42 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('email address not found')
+        return value
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        max_length=150, min_length=8, write_only=True)
+    confirm_password = serializers.CharField(
+        max_length=150, min_length=8, write_only=True)
+    token = serializers.CharField()
+
+    def validate(self, attrs):
+        if attrs.get('password') != attrs.get('confirm_password'):
+            raise serializers.ValidationError('passowrds do not match')
+        token = attrs.get('token')
+        try:
+            payload = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload['user_id']
+            user = User.objects.get(id=user_id)
+        except jwt.exceptions.DecodeError:
+            raise serializers.ValidationError('invalid token')
+        except User.DoesNotExist:
+            raise serializers.ValidationError('user not found')
+        attrs['user'] = user
+        return attrs
+
+    def save(self, **kwargs):
+        password = self.validated_data['password']
+        user = self.validated_data['user']
+        user.set_password(password)
+        user.save()

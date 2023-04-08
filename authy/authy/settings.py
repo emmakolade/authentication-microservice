@@ -144,6 +144,13 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'emmakolade@outlook.com'
 EMAIL_HOST_PASSWORD = 'Kollemma123##'
 
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+# EMAIL_HOST = 'smtp.sendgrid.net'
+# EMAIL_HOST_USER = 'apikey'
+# EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -166,4 +173,5 @@ REST_FRAMEWORK = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
+# frontend developer can set the url they want.
 FRONTEND_URL = str(os.getenv('FRONTEND_URL', 'http://localhost:8000'))

@@ -1,13 +1,13 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from django.contrib.auth import authenticate
 from .models import User
 from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, DeleteUserAccountSerializer
 from .utils import generate_otp, send_otp, send_welcome_email, send_password_reset_email, send_password_reset_confirmation_email
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -28,7 +28,7 @@ class RegisterView(generics.CreateAPIView):
                          'phone_number': user.phone_number,
                          'sex': user.sex,
                          'otp': user.otp,
-                         'status': 'OTP has been has sent to your email'}, status=status.HTTP_201_CREATED)
+                         }, status=status.HTTP_201_CREATED)
 
 
 class VerifyOTPView(generics.UpdateAPIView):
@@ -62,6 +62,8 @@ class LoginView(generics.GenericAPIView):
             user = serializer.validated_data['user']
 
             refresh = RefreshToken.for_user(user)
+
+            logger.info(f"User {user.email} logged in successfully.")
             return Response(
                 {
                     'refresh': str(refresh),
@@ -69,24 +71,12 @@ class LoginView(generics.GenericAPIView):
                 },
                 status=status.HTTP_200_OK,
             )
+        else:
+            logger.warning(
+                f"Unsuccessful login attempt: {request.data.get('email')}")
+
         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-# class LoginView(TokenObtainPairView):
-#     serializer_class = TokenObtainPairSerializer
-#     def post(self, request, *args, **kwargs):
-#         email = request.data.get('email', '')
-#         password = request.data.get('password', '')
-#         if email and password:
-#             user = authenticate(
-#                 request=request, email=email, password=password)
-#             if user is not None:
-#                 serializer = UserSerializer(user)
-#                 return Response(serializer.data, status=status.HTTP_200_OK)
-#         return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
-# class TokenRefreshView(TokenRefreshView):
-#     pass
 
 class PasswordResetView(generics.GenericAPIView):
     serializer_class = PasswordResetSerializer
@@ -112,6 +102,18 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         return Response({'status': 'success', 'message': 'Password reset successfully'}, status=status.HTTP_200_OK)
 
 
+class DeleteUserAccountView(generics.DestroyAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        return Response({'message': 'account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+
 # class DeleteUserAccountView(generics.DestroyAPIView):
 #     queryset = User.objects.all()
 #     permission_classes = (permissions.IsAuthenticated,)
@@ -124,22 +126,3 @@ class PasswordResetConfirmView(generics.GenericAPIView):
 #             return Response(status=status.HTTP_204_NO_CONTENT)
 #         else:
 #             return Response({'error': 'you  can only delete your own account'}, status=status.HTTP_403_FORBIDDEN)
-
-class DeleteUserAccountView(generics.DestroyAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
-
-    def get_object(self):
-        return self.request.user
-
-    def perform_destroy(self, instance):
-        instance.delete()
-        return Response({'message': 'account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-
-    # def delete(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     if instance == request.user:
-    #         if instance.is_staff or instance.is_superuser:
-    #             return Response({'error': 'you cannot delete an admin account'}, status=status.HTTP_403_FORBIDDEN)
-    #         self.perform_destroy(instance)
-    #     else:
-    #         return Response({'error': 'you can only delete your own account.'}, status=status.HTTP_403_FORBIDDEN)

@@ -168,3 +168,73 @@ REST_FRAMEWORK = {
 
 # frontend developer can set the url they want.
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'authentication': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+
+'''
+import cloudinary
+import logging
+from cloudinary.uploader import upload_stream
+
+# Configure Cloudinary
+cloudinary.config(
+  cloud_name = "your_cloud_name",
+  api_key = "your_api_key",
+  api_secret = "your_api_secret"
+)
+
+# Define a custom handler that uploads log messages to Cloudinary
+class CloudinaryHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            log_entry = self.format(record)
+            upload_stream(log_entry, resource_type="raw", folder="logs", public_id=record.msg)
+        except Exception:
+            self.handleError(record)
+
+# Configure logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'cloudinary': {
+            'class': 'path.to.CloudinaryHandler',
+            'level': 'INFO',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['cloudinary'],
+            'level': 'INFO',
+        },
+        'authentication': {
+            'handlers': ['cloudinary'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+'''

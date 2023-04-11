@@ -1,9 +1,8 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 from .models import User
-from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, DeleteUserAccountSerializer
+from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, RegisterStaffSerializer
 from .utils import generate_otp, send_otp, send_welcome_email, send_password_reset_email, send_password_reset_confirmation_email
 import logging
 
@@ -18,16 +17,43 @@ class RegisterView(generics.CreateAPIView):
         user = serializer.save()
         otp = generate_otp()
         send_otp(user.email, otp)
+
         user.otp = otp
         user.is_active = False
         user.save()
-        return Response({'id': user.id,
-                         'email': user.email,
-                         'username': user.username,
-                         'full_name': user.full_name,
-                         'phone_number': user.phone_number,
-                         'sex': user.sex,
-                         'otp': user.otp,
+
+        response_data = {
+            'id': user.id,
+            'email': user.email,
+            'username': user.username,
+            'full_name': user.full_name,
+            'phone_number': user.phone_number,
+            'sex': user.sex,
+            'otp': user.otp,
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class RegisterStaffView(RegisterView):
+    serializer_class = RegisterStaffSerializer
+
+    def perform_create(self, serializer):
+        staff = serializer.save()
+        otp = generate_otp()
+        send_otp(staff.email, otp)
+
+        staff.otp = otp
+        staff.is_active = False
+        staff.is_staff = True
+
+        staff.save()
+        return Response({'id': staff.id,
+                         'email': staff.email,
+                         'username': staff.username,
+                         'full_name': staff.full_name,
+                         'phone_number': staff.phone_number,
+                         'sex': staff.sex,
+                         'otp': staff.otp,
                          }, status=status.HTTP_201_CREATED)
 
 
@@ -111,7 +137,6 @@ class DeleteUserAccountView(generics.DestroyAPIView):
     def perform_destroy(self, instance):
         instance.delete()
         return Response({'message': 'account deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-
 
 
 # class DeleteUserAccountView(generics.DestroyAPIView):

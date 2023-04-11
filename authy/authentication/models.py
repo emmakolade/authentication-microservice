@@ -16,7 +16,7 @@ class CustomUserManager(BaseUserManager):
 
     def create_superuser(self, email, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_superuser', False)
         return self.create_user(email, username, password, **extra_fields)
 
 
@@ -44,3 +44,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.username
+
+
+class StaffID(models.Model):
+    code = models.CharField(max_length=15, unique=True)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, null=True, blank=True, related_name='staff_id')
+
+    def __str__(self):
+        return self.code

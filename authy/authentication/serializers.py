@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+from .models import User, StaffID
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 import jwt
 
 
@@ -33,6 +34,48 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Passwords do not match")
         user = User.objects.create_user(**validated_data, password=password)
         return user
+
+
+class RegisterStaffSerializer(serializers.ModelSerializer):
+    staff_id = serializers.CharField(max_length=20, required=True)
+    password = serializers.CharField(
+        max_length=150, min_length=8, write_only=True)
+    confirm_password = serializers.CharField(
+        max_length=150, min_length=8, write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'staff_id', 'email', 'username', 'full_name',
+                  'phone_number', 'sex', 'password', 'otp', 'confirm_password')
+        read_only_fields = ('id', 'otp',)
+
+    def validate(self, attrs):
+        staff_id = attrs.get('staff_id')
+        if staff_id is not None:
+            try:
+                staff_ids = StaffID.objects.get(code=staff_id)
+            except StaffID.DoesNotExist:
+                raise serializers.ValidationError('invalid staff code')
+
+        return attrs
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        confirm_password = validated_data.pop('confirm_password')
+        staff_id = validated_data.pop('staff_id', None)
+
+        if password != confirm_password:
+            raise serializers.ValidationError("Passwords do not match")
+        if not staff_id:
+            raise serializers.ValidationError(
+                'your staff ID is required for creating a staff account')
+        staff = User.objects.create_superuser(
+            **validated_data, password=password)
+        staff_ids = StaffID.objects.get(code=staff_id)
+        staff_ids.staff = staff
+        staff_ids.save()
+
+        return staff
 
 
 class OTPSerializer(serializers.Serializer):

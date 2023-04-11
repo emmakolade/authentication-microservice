@@ -158,7 +158,9 @@ python manage.py runserver`
   "confirm_password": "stringst",
   "token": "string"
 }`
-
+**Response Body:**
+`an email is sent to the user with a link like this -  http://localhost:8000/reset-password/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyfQ.d-od5`
+note that the frontend URL can be set in the environment variable.if not set, the default will be  http://localhost:8000
 ### Delete Account
 
 **URL:** `/user/delete-account/`

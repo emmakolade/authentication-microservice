@@ -36,7 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class RegisterStaffSerializer(serializers.ModelSerializer):
+class RegisterAdminSerializer(serializers.ModelSerializer):
     staff_id = serializers.CharField(max_length=20, required=True)
     password = serializers.CharField(
         max_length=150, min_length=8, write_only=True)

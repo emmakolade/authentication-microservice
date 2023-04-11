@@ -2,7 +2,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
-from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, RegisterStaffSerializer
+from .serializers import UserSerializer, OTPSerializer, LoginSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, RegisterAdminSerializer
 from .utils import generate_otp, send_otp, send_welcome_email, send_password_reset_email, send_password_reset_confirmation_email
 import logging
 
@@ -34,8 +34,8 @@ class RegisterView(generics.CreateAPIView):
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 
-class RegisterStaffView(RegisterView):
-    serializer_class = RegisterStaffSerializer
+class RegisterAdminView(RegisterView):
+    serializer_class = RegisterAdminSerializer
 
     def perform_create(self, serializer):
         staff = serializer.save()
@@ -45,6 +45,7 @@ class RegisterStaffView(RegisterView):
         staff.otp = otp
         staff.is_active = False
         staff.is_staff = True
+        staff.is_superuser = False
 
         staff.save()
         return Response({'id': staff.id,
